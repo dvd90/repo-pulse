@@ -6,6 +6,7 @@ import { systemRoutes } from "./routes/system.js";
 import { schemaRoutes } from "./routes/schema.js";
 import { healthRoutes } from "./routes/health.js";
 import { parseEnv } from "./env.js";
+import { parseRepo } from "./lib/repo.js";
 import { buildPaymentMiddleware } from "./lib/x402/middleware.js";
 import type { FacilitatorClient } from "@x402/core/server";
 import type { AppEnv } from "./types.js";
@@ -40,6 +41,14 @@ export function createApp(options: CreateAppOptions = {}): Hono<AppEnv> {
       await next();
     });
   }
+
+  // Validate the `repo` param BEFORE the payment gate so an obviously-malformed
+  // request gets a 400 instead of being charged. parseRepo throws a 400
+  // AppError, handled centrally.
+  app.use("/v1/health", async (c, next) => {
+    parseRepo(c.req.query("repo"));
+    await next();
+  });
 
   // x402 payment gate on the paid endpoint only. Env is per-request in Workers,
   // so we build the payment middleware lazily on first request and memoize it
