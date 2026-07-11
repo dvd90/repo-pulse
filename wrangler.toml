@@ -1,0 +1,38 @@
+name = "repo-pulse"
+main = "src/index.ts"
+compatibility_date = "2026-07-01"
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
+
+[[kv_namespaces]]
+binding = "HEALTH_CACHE"
+id = "3c5ebed75e404b10bb826ccfa97ad5d8"
+
+[vars]
+# Non-secret config. Secrets (WALLET_ADDRESS, GITHUB_TOKEN, CDP_API_KEY_ID,
+# CDP_API_KEY_SECRET) are set with `wrangler secret put <NAME>` — see README.
+X402_NETWORK = "eip155:8453"
+X402_PRICE_USD = "$0.01"
+X402_FACILITATOR_URL = "https://api.cdp.coinbase.com/platform/v2/x402"
+CACHE_TTL_SECONDS = "900"
+GITHUB_TIMEOUT_MS = "5000"
+SERVICE_NAME = "RepoPulse Health API"
+SERVICE_DESCRIPTION = "Deterministic 0-100 health score for any public GitHub repository, with a per-signal breakdown (commit recency, release cadence, issue hygiene, PR flow, bus factor, CI presence, test presence, docs, dependency freshness)."
+
+[env.staging]
+name = "repo-pulse-staging"
+
+[env.staging.vars]
+X402_NETWORK = "eip155:84532"
+X402_PRICE_USD = "$0.01"
+X402_FACILITATOR_URL = "https://x402.org/facilitator"
+CACHE_TTL_SECONDS = "900"
+GITHUB_TIMEOUT_MS = "5000"
+SERVICE_NAME = "RepoPulse Health API (staging)"
+SERVICE_DESCRIPTION = "Staging deployment of RepoPulse on Base Sepolia testnet."
+
+[[env.staging.kv_namespaces]]
+binding = "HEALTH_CACHE"
+id = "3c5ebed75e404b10bb826ccfa97ad5d8"
