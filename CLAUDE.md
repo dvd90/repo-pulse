@@ -98,12 +98,17 @@ For local dev, put these in `.dev.vars` (git-ignored).
 - [x] **M0 — Scaffold**: wrangler project, Hono app, `/healthz`, `/readyz`,
       `/v1/schema`, callId middleware, error handler, structured logging, CI
       (`.github/workflows/verify.yml`), CLAUDE.md. `npm run verify` green.
-- [ ] **M1 — Scoring core**: GitHub fetcher (mocked in tests) + nine signal
-      calculators + composite scorer. Golden-file tests.
-- [ ] **M2 — x402**: payment middleware on `/v1/health`, CDP facilitator, Bazaar
-      discovery extension, 402→pay→retry integration test.
-- [ ] **M3 — Hardening + deploy**: KV cache, rate-limit handling, 5s budget with
-      `stale` flag, README, `wrangler deploy`.
+- [x] **M1 — Scoring core**: GitHub fetcher (`src/lib/github/`, fully mocked in
+      tests) + nine signal calculators + composite scorer (`src/lib/scoring/`).
+      Golden-file tests over three fixtures (healthy A/92, abandoned F/12,
+      minimal D/50). `HealthCache` (KV) and `getHealthReport` service wired.
+- [x] **M2 — x402**: payment middleware on `/v1/health` (`src/lib/x402/`), CDP
+      facilitator client (JWT auth), Bazaar discovery extension with full
+      input/output schemas. Integration test simulates 402 → pay → retry against
+      a fake facilitator in workerd (verify + settle consulted). 110 tests green.
+- [ ] **M3 — Hardening + deploy**: KV cache (done), rate-limit handling (done),
+      5s budget with `stale` flag (done) — remaining: README, one real Base
+      mainnet settlement, `wrangler deploy`, Bazaar indexing, awesome-x402 PR.
 
 ## Notes for future edits
 

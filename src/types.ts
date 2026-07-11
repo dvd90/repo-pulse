@@ -7,5 +7,10 @@ export interface AppEnv {
   Variables: {
     callId: string;
     log: Logger;
+    /**
+     * Optional injected fetch used by the GitHub fetcher. Undefined in
+     * production (global fetch is used); tests set it to mock the GitHub API.
+     */
+    githubFetch?: typeof fetch;
   };
 }

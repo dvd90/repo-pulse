@@ -7,7 +7,11 @@ import type { Bindings } from "./env.js";
 // without depending on the git-ignored generated `worker-configuration.d.ts`.
 declare global {
   namespace Cloudflare {
-    type Env = Bindings;
+    // Declaration-merges with the empty `interface Env {}` shipped by
+    // @cloudflare/workers-types, giving `Cloudflare.Env` (and thus the
+    // `cloudflare:test` `env`) all of our Worker bindings.
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface Env extends Bindings {}
   }
 }
 
