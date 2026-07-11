@@ -48,4 +48,27 @@ describe("commitRecency", () => {
     expect(r.score).toBe(0);
     expect(r.daysSinceLastCommit).toBeNull();
   });
+
+  it("treats an empty-string commit date as missing and falls back to pushedAt", () => {
+    // The fetcher emits "" when a commit has no date; that must not defeat the
+    // pushedAt fallback (regression: `"" ?? x` kept the empty sentinel).
+    const r = commitRecency(
+      baseSnapshot({ commits: [{ date: "", authorLogin: null }], meta: { pushedAt: daysAgo(2) } }),
+    );
+    expect(r.score).toBe(100);
+    expect(r.usedPushFallback).toBe(true);
+  });
+
+  it("skips a dateless newest commit and uses the next dated commit", () => {
+    const r = commitRecency(
+      baseSnapshot({
+        commits: [
+          { date: "", authorLogin: null },
+          { date: daysAgo(0), authorLogin: "a" },
+        ],
+      }),
+    );
+    expect(r.score).toBe(100);
+    expect(r.usedPushFallback).toBe(false);
+  });
 });

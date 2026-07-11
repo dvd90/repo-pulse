@@ -6,11 +6,22 @@ import type { Logger } from "../log.js";
  * full computed report plus the epoch millis it was cached, so we can serve a
  * *stale* copy (with a `stale` flag) when GitHub is slow or rate-limited.
  *
- * KV's own `expirationTtl` performs hard eviction; we keep the cached-at time in
- * the value to support the soft/stale-serve behavior independently.
+ * Freshness (`isFresh`, driven by `ttlSeconds`) is deliberately decoupled from
+ * KV retention (`expirationTtl`). We retain each entry for the freshness window
+ * PLUS a longer `STALE_RETENTION_SECONDS` grace, so a copy still exists in KV
+ * after it stops being fresh — otherwise KV would hard-evict it at the exact
+ * moment the stale-serve fallback needs it, making that fallback unreachable in
+ * production.
  */
 
 const KEY_PREFIX = "health:";
+
+/**
+ * How long past the freshness window a report is retained in KV so it can still
+ * back a stale-serve when GitHub is unavailable. 24h is long enough to ride out
+ * an extended outage while bounding staleness of the fallback.
+ */
+export const STALE_RETENTION_SECONDS = 24 * 60 * 60;
 
 export interface CachedReport {
   report: HealthReport;
@@ -55,7 +66,9 @@ export class HealthCache {
     try {
       const value: CachedReport = { report, cachedAt: nowMs };
       await this.kv.put(this.key(repoFull), JSON.stringify(value), {
-        expirationTtl: Math.max(60, this.opts.ttlSeconds),
+        // Retain past the freshness window so the stale-serve fallback has
+        // something to return. Freshness is enforced separately by isFresh().
+        expirationTtl: Math.max(60, this.opts.ttlSeconds) + STALE_RETENTION_SECONDS,
       });
     } catch (e) {
       this.opts.log?.warn("cache_set_failed", { repo: repoFull, error: msg(e) });

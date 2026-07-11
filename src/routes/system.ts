@@ -52,5 +52,7 @@ systemRoutes.get("/readyz", async (c) => {
   }
 
   const ready = Object.values(checks).every((c2) => c2.ok);
-  return ok(c, { ready, checks }, ready ? 200 : 503);
+  // Build the envelope directly so its `ok` flag reflects readiness rather than
+  // always claiming success — a 503 must not carry `ok: true`.
+  return c.json({ ok: ready, data: { ready, checks }, callId: c.get("callId") }, ready ? 200 : 503);
 });

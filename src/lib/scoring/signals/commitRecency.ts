@@ -20,7 +20,11 @@ import { clampScore, daysBetween, decayScore } from "./_util.js";
  * since there is no evidence of any activity.
  */
 export function commitRecency(snapshot: RepoSnapshot): SignalResult {
-  const newestCommitDate = snapshot.commits[0]?.date ?? null;
+  // The fetcher emits "" (not null) when a commit carries no date, so treat an
+  // empty string as missing too — otherwise `"" ?? x` would keep the empty
+  // sentinel and defeat the pushedAt fallback. Use the newest commit that
+  // actually has a date.
+  const newestCommitDate = snapshot.commits.find((c) => c.date)?.date ?? null;
   const referenceDate = newestCommitDate ?? snapshot.meta.pushedAt;
 
   const days = daysBetween(referenceDate, snapshot.asOf);
