@@ -21,7 +21,7 @@ landingRoutes.get("/", (c) => {
     // keep defaults if config is momentarily invalid
   }
   const origin = new URL(c.req.url).origin;
-  return c.html(page(origin, price, network));
+  return c.html(renderLandingPage(origin, price, network));
 });
 
 // Sample specimen shown on the page — mirrors the schema example (honojs/hono).
@@ -71,7 +71,7 @@ function signalRows(): string {
   }).join("");
 }
 
-function page(origin: string, price: string, network: string): string {
+export function renderLandingPage(origin: string, price: string, network: string): string {
   return (
     '<!doctype html><html lang="en"><head>' +
     '<meta charset="utf-8"/>' +
