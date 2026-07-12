@@ -130,6 +130,15 @@ console.log(data.score, data.grade); // e.g. 91 A
 The endpoint is also published in the **x402 Bazaar** discovery index, so agents
 can find it (and its exact input/output schema) programmatically.
 
+### Use it as an MCP tool
+
+An MCP bridge server ([`mcp/`](mcp/README.md)) exposes RepoPulse as tools for any
+MCP host (Claude Desktop, Cursor, …): `get_repo_health` (paid, auto-settles via
+x402) and `get_repo_pulse_schema` (free). Point your host at
+`mcp/repo-pulse-mcp.ts` with a funded Base wallet key and ask, e.g., *"score
+honojs/hono"* — the payment happens under the hood. See
+[`mcp/README.md`](mcp/README.md) for the config snippet.
+
 ---
 
 ## Architecture
