@@ -5,6 +5,7 @@ import { onError, onNotFound } from "./lib/errorHandler.js";
 import { systemRoutes } from "./routes/system.js";
 import { schemaRoutes } from "./routes/schema.js";
 import { healthRoutes } from "./routes/health.js";
+import { landingRoutes } from "./routes/landing.js";
 import { parseEnv } from "./env.js";
 import { parseRepo } from "./lib/repo.js";
 import { buildPaymentMiddleware } from "./lib/x402/middleware.js";
@@ -68,6 +69,7 @@ export function createApp(options: CreateAppOptions = {}): Hono<AppEnv> {
     return paymentMw(c, next);
   });
 
+  app.route("/", landingRoutes);
   app.route("/", systemRoutes);
   app.route("/", schemaRoutes);
   app.route("/", healthRoutes);
