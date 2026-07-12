@@ -5,7 +5,7 @@ import { bazaarResourceServerExtension } from "@x402/extensions/bazaar";
 import type { FacilitatorClient } from "@x402/core/server";
 import type { Config } from "../../env.js";
 import type { Logger } from "../log.js";
-import { buildFacilitatorClient } from "./facilitator.js";
+import { buildFacilitatorClient, withStaticSupported } from "./facilitator.js";
 import { healthDiscoveryExtension } from "./bazaar.js";
 
 /** CAIP-2 network id, typed to satisfy the SDK's `Network` template type. */
@@ -36,8 +36,12 @@ export function buildPaymentMiddleware(
   config: Config,
   opts: PaymentMiddlewareOptions = {},
 ): MiddlewareHandler {
-  const facilitator = opts.facilitatorClient ?? buildFacilitatorClient(config, opts.log);
   const network = config.X402_NETWORK as Caip2;
+  // Production: wrap the CDP client so supported kinds are declared statically
+  // (no network round-trip to build a 402). Tests inject a fake directly.
+  const facilitator =
+    opts.facilitatorClient ??
+    withStaticSupported(buildFacilitatorClient(config, opts.log), network);
 
   const server = new x402ResourceServer(facilitator)
     .register(network, new ExactEvmScheme())
@@ -64,6 +68,9 @@ export function buildPaymentMiddleware(
     server,
     undefined,
     undefined,
-    opts.syncFacilitatorOnStart ?? false,
+    // Sync supported kinds on start (the SDK default). With the static-supported
+    // wrapper this is an instant, network-free population of the kinds map, so
+    // the first 402 can be built without a facilitator round-trip.
+    opts.syncFacilitatorOnStart ?? true,
   );
 }

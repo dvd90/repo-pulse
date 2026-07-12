@@ -52,6 +52,17 @@ beforeEach(async () => {
 });
 
 describe("x402 payment gate on /v1/health", () => {
+  it("builds a 402 with the production default (no syncFacilitatorOnStart override)", async () => {
+    // Regression: the resource server must fetch supported kinds on start, else
+    // buildPaymentRequirements throws and the endpoint 500s. This omits the
+    // sync flag so it exercises the same default a real deployment uses.
+    const { client } = createFakeFacilitator(NETWORK);
+    const app = createApp({ facilitatorClient: client });
+    const res = await app.request("/v1/health?repo=o/n", {}, env);
+    expect(res.status).toBe(402);
+    expect(res.headers.get("payment-required")).toBeTruthy();
+  });
+
   it("returns 402 with payment requirements when unpaid", async () => {
     const { client } = createFakeFacilitator(NETWORK);
     const app = createApp({ facilitatorClient: client, syncFacilitatorOnStart: true });

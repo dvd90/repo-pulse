@@ -1,6 +1,45 @@
 import { HTTPFacilitatorClient } from "@x402/core/server";
+import type { FacilitatorClient } from "@x402/core/server";
 import type { Config } from "../../env.js";
 import type { Logger } from "../log.js";
+
+type Caip2 = `${string}:${string}`;
+
+/**
+ * Wrap a facilitator client so its `getSupported()` returns a fixed set of kinds
+ * instead of calling the facilitator over the network.
+ *
+ * Why: the resource server can only build a 402 after it knows the facilitator
+ * supports (scheme, network). The stock path fetches that with a network call to
+ * the facilitator's `/supported` endpoint on first request — which, on Cloudflare
+ * Workers, adds a cold-start round-trip and hard-fails the endpoint if the
+ * facilitator is briefly unreachable or the CDP `/supported` auth hiccups.
+ *
+ * The (scheme=exact, network=Base) pair is a fixed property of this deployment,
+ * not something we need to discover at runtime, so we declare it statically and
+ * still delegate the real work — `verify` and `settle` — to the wrapped client.
+ * This makes 402 generation self-contained and deterministic; only settlement
+ * needs the network.
+ */
+export function withStaticSupported(
+  client: FacilitatorClient,
+  network: Caip2,
+  scheme = "exact",
+): FacilitatorClient {
+  return {
+    async getSupported() {
+      return {
+        kinds: [{ x402Version: 2, scheme, network }],
+        // Advertise the bazaar discovery extension (CDP supports it) so the
+        // server keeps the route's discovery info in the 402.
+        extensions: ["bazaar"],
+        signers: {},
+      };
+    },
+    verify: (payload, requirements) => client.verify(payload, requirements),
+    settle: (payload, requirements) => client.settle(payload, requirements),
+  };
+}
 
 /**
  * Build the facilitator client for verify/settle. In production this is the
