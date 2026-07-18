@@ -44,11 +44,15 @@ export function createApp(options: CreateAppOptions = {}): Hono<AppEnv> {
     });
   }
 
-  // Validate the `repo` param BEFORE the payment gate so an obviously-malformed
-  // request gets a 400 instead of being charged. parseRepo throws a 400
-  // AppError, handled centrally.
+  // Validate the `repo` param before SETTLING, not before the 402 challenge:
+  // an unpaid request always gets the payment challenge (indexers like
+  // x402scan probe the bare URL and require a 402), while a paying request
+  // with a malformed repo gets a 400 BEFORE its payment is settled, so nobody
+  // is charged for a typo. parseRepo throws a 400 AppError, handled centrally;
+  // the route handler re-validates after payment.
   app.use("/v1/health", async (c, next) => {
-    parseRepo(c.req.query("repo"));
+    const paying = c.req.header("PAYMENT-SIGNATURE") ?? c.req.header("X-PAYMENT");
+    if (paying) parseRepo(c.req.query("repo"));
     await next();
   });
 

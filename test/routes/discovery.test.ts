@@ -33,6 +33,17 @@ describe("GET /.well-known/x402", () => {
   });
 });
 
+describe("GET /favicon.ico", () => {
+  it("serves a valid ICO", async () => {
+    const res = await app.request("https://example.com/favicon.ico", {}, env);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("image/x-icon");
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    // ICO magic: reserved=0, type=1 (icon), count>=1.
+    expect([bytes[0], bytes[1], bytes[2], bytes[3], bytes[4]]).toEqual([0, 0, 1, 0, 1]);
+  });
+});
+
 describe("GET /openapi.json", () => {
   it("declares x402 payment info and a 402 response on the paid operation", async () => {
     const res = await app.request("https://example.com/openapi.json", {}, env);
@@ -56,6 +67,9 @@ describe("GET /openapi.json", () => {
     };
     expect(body.openapi).toBe("3.1.0");
     expect(body.servers).toEqual([{ url: "https://example.com" }]);
+    expect(
+      (body as unknown as { info: { contact: { email: string } } }).info.contact.email,
+    ).toBe("dvdsellam@gmail.com");
 
     const paid = body.paths["/v1/health"]!.get;
     expect(paid["x-payment-info"]?.protocols).toContain("x402");
@@ -68,9 +82,11 @@ describe("GET /openapi.json", () => {
     expect(paid.responses["402"]).toBeDefined();
     expect(body.components.schemas.HealthReport).toBeDefined();
 
-    // Free endpoints are listed without payment info.
+    // Free endpoints carry no payment info and opt out of x402 probing.
     for (const path of ["/v1/schema", "/healthz", "/readyz"]) {
-      expect(body.paths[path]!.get["x-payment-info"]).toBeUndefined();
+      const op = body.paths[path]!.get as { "x-payment-info"?: unknown; security?: unknown[] };
+      expect(op["x-payment-info"]).toBeUndefined();
+      expect(op.security).toEqual([]);
     }
   });
 });

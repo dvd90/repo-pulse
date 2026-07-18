@@ -20,6 +20,21 @@ export const discoveryRoutes = new Hono<AppEnv>();
 
 const origin = (c: Context<AppEnv>): string => new URL(c.req.url).origin;
 
+/** Owner contact surfaced in openapi.json — x402scan uses it to verify ownership. */
+const CONTACT = { name: "David Sellam", email: "dvdsellam@gmail.com" };
+
+// 16x16 ICO (green square, white pulse line) — x402scan shows it next to the
+// listing. Generated once (32bpp ICO, rounded corners), embedded as base64.
+const FAVICON_B64 =
+  "AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP8AAAAAgbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD///////////+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ////////////gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP///////////4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/////////////////gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ//////+BuRD//////4G5EP+BuRD/gbkQ/4G5EP+BuRD/////////////////////////////////gbkQ////////////gbkQ/////////////////////////////////4G5EP+BuRD/gbkQ/4G5EP+BuRD//////4G5EP//////gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/////////////////4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD///////////+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ////////////gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP///////////4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP8AAAAAgbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP+BuRD/gbkQ/4G5EP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
+
+discoveryRoutes.get("/favicon.ico", (c) => {
+  const bytes = Uint8Array.from(atob(FAVICON_B64), (ch) => ch.charCodeAt(0));
+  c.header("Content-Type", "image/x-icon");
+  c.header("Cache-Control", "public, max-age=86400");
+  return c.body(bytes);
+});
+
 const wellKnown = (c: Context<AppEnv>) =>
   c.json({
     version: 1,
@@ -42,6 +57,7 @@ discoveryRoutes.get("/openapi.json", (c) => {
         "Deterministic 0-100 health score for any public GitHub repository, " +
         "with a nine-signal breakdown, A-F grade, flags, and a one-line summary. " +
         "Paid per call via x402 (USDC on Base); no account or API key.",
+      contact: CONTACT,
     },
     servers: [{ url: origin(c) }],
     paths: {
@@ -91,10 +107,13 @@ discoveryRoutes.get("/openapi.json", (c) => {
           },
         },
       },
+      // Free endpoints: `security: []` tells x402 indexers not to probe them
+      // for a 402 challenge.
       "/v1/schema": {
         get: {
           operationId: "getSchema",
           summary: "Response JSON Schema + active signal weights (free)",
+          security: [],
           responses: { "200": { description: "Schema and weights" } },
         },
       },
@@ -102,6 +121,7 @@ discoveryRoutes.get("/openapi.json", (c) => {
         get: {
           operationId: "livez",
           summary: "Liveness (free)",
+          security: [],
           responses: { "200": { description: "OK" } },
         },
       },
@@ -109,6 +129,7 @@ discoveryRoutes.get("/openapi.json", (c) => {
         get: {
           operationId: "readyz",
           summary: "Readiness: config + KV + facilitator (free)",
+          security: [],
           responses: { "200": { description: "Ready" } },
         },
       },
