@@ -76,6 +76,7 @@ export function renderLandingPage(origin: string, price: string, network: string
     '<!doctype html><html lang="en"><head>' +
     '<meta charset="utf-8"/>' +
     '<meta name="viewport" content="width=device-width, initial-scale=1"/>' +
+    '<link rel="icon" href="/favicon.ico" sizes="16x16" type="image/x-icon"/>' +
     "<title>RepoPulse — repository vitals, priced per call</title>" +
     '<meta name="description" content="A deterministic 0-100 health score for any public GitHub repository. ' +
     price +
