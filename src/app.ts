@@ -6,6 +6,7 @@ import { systemRoutes } from "./routes/system.js";
 import { schemaRoutes } from "./routes/schema.js";
 import { healthRoutes } from "./routes/health.js";
 import { landingRoutes } from "./routes/landing.js";
+import { discoveryRoutes } from "./routes/discovery.js";
 import { parseEnv } from "./env.js";
 import { parseRepo } from "./lib/repo.js";
 import { buildPaymentMiddleware } from "./lib/x402/middleware.js";
@@ -70,6 +71,7 @@ export function createApp(options: CreateAppOptions = {}): Hono<AppEnv> {
   });
 
   app.route("/", landingRoutes);
+  app.route("/", discoveryRoutes);
   app.route("/", systemRoutes);
   app.route("/", schemaRoutes);
   app.route("/", healthRoutes);

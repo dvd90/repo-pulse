@@ -81,6 +81,10 @@ src/
 - `GET /v1/schema` — free; response JSON Schema + active weights.
 - `GET /healthz` — free liveness.
 - `GET /readyz` — free readiness (config + KV + facilitator reachability).
+- `GET /.well-known/x402` (+ `.json` alias) — free; x402 discovery document
+  listing paid resources (consumed by x402scan and other indexers).
+- `GET /openapi.json` — free; OpenAPI 3.1 with `x-payment-info` on `/v1/health`.
+  Both discovery routes return raw spec JSON, not the app envelope.
 
 ## Configuration & secrets
 
