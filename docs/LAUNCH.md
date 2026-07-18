@@ -98,8 +98,8 @@ Free bits: GET /v1/schema (response schema + scoring weights), and the
 scoring methodology is open source.
 
 Try it:
-  curl https://<deployed-url>/v1/schema
-  curl -i "https://<deployed-url>/v1/health?repo=honojs/hono"   # 402
+  curl https://repo-pulse.dvd90.workers.dev/v1/schema
+  curl -i "https://repo-pulse.dvd90.workers.dev/v1/health?repo=honojs/hono"   # 402
 
 Happy to answer anything about x402, Workers, or the scoring model —
 especially interested in whether the signals match your intuition of
@@ -124,7 +124,7 @@ four done sporadically. Don't add a newsletter or YouTube.)
 
 ## Phase 6 — product-embedded distribution (next feature, not pre-launch)
 
-Free README badge: `![repo health](https://<deployed-url>/badge/{owner}/{repo})`
+Free README badge: `![repo health](https://repo-pulse.dvd90.workers.dev/badge/{owner}/{repo})`
 — every badge is a permanent backlink and ad; the free badge markets the paid
 API (the Shields.io play). Worth a milestone of its own; don't block the
 launch on it.
